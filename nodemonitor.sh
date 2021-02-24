@@ -130,7 +130,7 @@ while true; do
 
     nloglines=$(wc -l <$logfile)
     if [ $nloglines -gt $logsize ]; then
-        case $LOGROTATION in
+        case $logmgmt in
         1)
             mv $logfile "${logfile}.1"
             touch $logfile
