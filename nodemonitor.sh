@@ -12,6 +12,7 @@ worklock="on"     # set to 'on' for worklock specific data
 logname=""        # a custom log file name can be chosen, if left empty default is nodecheck-<username>.log
 logpath="$(pwd)"  # the directory where the log file is stored, for customization insert path like: /my/path
 logsize=200       # the max number of lines after that the log gets truncated to reduce its size
+logmgmt="1"       # options for log rotation: (1) rotate to $LOGNAME.1 every $LOGSIZE lines;  (2) append to $LOGNAME.1 every $LOGSIZE lines; (3) truncate $logfile to $LOGSIZE every iteration
 sleep1=30s        # polls every sleep1 sec
 #####  END CONFIG  ##################################################################################################
 
@@ -128,8 +129,23 @@ while true; do
     fi
 
     nloglines=$(wc -l <$logfile)
-    if [ $nloglines -gt $logsize ]; then sed -i '1d' $logfile; fi
-
+    if [ $nloglines -gt $LOGSIZE ]; then
+        case $LOGROTATION in
+        1)
+            mv $logfile "${logfile}.1"
+            touch $logfile
+            ;;
+        2)
+            echo "$(cat $logfile)" >>${logfile}.1
+            >$logfile
+            ;;
+        3)
+            sed -i '1d' $logfile
+            if [ -f ${logfile}.1 ]; then rm ${logfile}.1; fi # no log rotation with option (3)
+            ;;
+        *) ;;
+        esac
+    fi
     echo "$logentry"
     echo "sleep $sleep1"
     sleep $sleep1
